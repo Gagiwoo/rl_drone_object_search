@@ -68,3 +68,18 @@ If you find this code usefull, please consider citing our paper:
 This research is part of the research program SYNERGIA, funding was obtained from the Dutch Research Council (NWO grant 17626), IMEC-One Planet and other private parties.
 
 <img src="assets/wageningen_logo.png" alt="wageningen university logo" height="50"> &nbsp;&nbsp;&nbsp; <img src="assets/synergia_logo_basis.png" alt="synergia logo" height="50">
+
+
+# python train_rl.py --algo=custom_dqn --env=DroneGridEnv-v0 --gym-packages=drone_grid_env --conf-file=experiments/distributions/dqn_random.yaml
+
+python train_rl.py \
+    --algo=custom_dqn \
+    --env=DroneGridEnv-v0 \
+    --gym-packages=drone_grid_env \
+    --conf-file=experiments/distributions/dqn_random.yaml \
+    --track \
+    --wandb-project-name="drone-search" \
+    --eval-freq=10000 \
+    --eval-episodes=10 \
+    --n-eval-envs=1 \
+    --save-freq=1000000# TestingRepo
