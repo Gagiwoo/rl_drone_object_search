@@ -1,0 +1,96 @@
+# Multi-Channel CAE-based DQN Configuration
+# Each channel (3) processed independently by separate CAEs
+
+DroneGridEnv-v0:
+  # ========== Training Parameters ==========
+  n_timesteps: 1000000
+  n_envs: 12
+  
+  # ========== DQN Hyperparameters ==========
+  batch_size: 128
+  buffer_size: 50000
+  learning_rate: 3.0e-05
+  learning_starts: 25000
+  gamma: 0.95
+  tau: 0.005
+  train_freq: 12
+  gradient_steps: 128
+  target_update_interval: 1
+  
+  # ========== Exploration ==========
+  exploration_fraction: 1.0
+  exploration_initial_eps: 0.0
+  exploration_final_eps: 0.0
+  
+  # ========== Policy Configuration ==========
+  policy: sb3_custom.policies.MultiChannelCAEPolicy
+  
+  policy_kwargs:
+    # Multi-Channel CAE Feature Extractor
+    features_extractor_kwargs:
+      cae_model_path: 'models/multi_channel_cae_pretrained.pth'
+      latent_dim_per_channel: 256  # Per channel latent (total: 3×128=384)
+      freeze_cae: true
+      
+      # Local map CNN config
+      config:
+        local_map:
+          conv_kernel_size: 5
+          conv_kernels_num: 16
+          conv_layer_num: 2
+    
+    # Q-Network architecture
+    net_arch:
+      - 256
+      - 256
+      - 256
+    
+    # Optimizer settings
+    optimizer_kwargs:
+      amsgrad: true
+    
+    # Softmax scaling for exploration
+    softmax_scaling: 0.1
+  
+  # ========== Environment Wrapper ==========
+  env_wrapper:
+    - drone_grid_env.wrappers.EpisodeInfoBufferWrapper
+  
+  # ========== Callbacks ==========
+  callback:
+    # 1. Model Summary
+    - sb3_custom.callbacks.ModelSummaryCallback
+    
+    # 2. Episode Info Logger
+    - sb3_custom.callbacks.EpisodeInfoLoggerCallback
+    
+    # 3. Weights & Biases Logger
+    - sb3_custom.callbacks.CustomWandbCallback
+    
+    # 4. Video Recording
+    - sb3_custom.callbacks.RecordVideoCallback:
+        video_path: training/cae_multi_channel/
+        deterministic: false
+        fallback_env: DroneGridEnv-v0
+        fallback_env_kwargs:
+          config_file: experiments/distributions/env_config_random.yaml
+        n_video_episodes: 3
+        save_individual_episodes: true
+        record_freq: 50000
+        seed: 1234
+        verbose: true
+    
+    # 5. Evaluation Callback
+    - sb3_custom.callbacks.EvaluationCallback:
+        best_model_save_path: training/cae_multi_channel/
+        last_model_save_path: training/cae_multi_channel/
+        log_path: training/cae_multi_channel/evaluations
+        deterministic: false
+        eval_freq: 10000
+        fallback_env: DroneGridEnv-v0
+        fallback_env_kwargs:
+          config_file: experiments/distributions/env_config_random.yaml
+        n_eval_envs: 12
+        n_eval_episodes: 10
+        seed: 1234
+        vec_env_class: subproc

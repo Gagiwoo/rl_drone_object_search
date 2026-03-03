@@ -10,7 +10,7 @@ DroneGridEnv-v0:
         deterministic: false
         fallback_env: DroneGridEnv-v0
         fallback_env_kwargs:
-          config_file: experiments/distributions/env_config_random.yaml
+          config_file: experiments/distributions/env_config_medium.yaml
         n_video_episodes: 3
         save_individual_episodes: true
         record_freq: 50000
@@ -24,7 +24,7 @@ DroneGridEnv-v0:
         eval_freq: 10000
         fallback_env: DroneGridEnv-v0
         fallback_env_kwargs:
-          config_file: experiments/distributions/env_config_random.yaml
+          config_file: experiments/distributions/env_config_medium.yaml
         n_eval_envs: 12
         n_eval_episodes: 10
         seed: 1234
@@ -39,8 +39,8 @@ DroneGridEnv-v0:
   learning_rate: 3.0e-05
   learning_starts: 25000
   n_envs: 12
-  n_timesteps: 10000000
-  policy: sb3_custom.policies.LocalGlobalSoftmaxScalingPolicy
+  n_timesteps: 5000000
+  policy: sb3_custom.policies.local_global_softmax_scaling_policy.LocalGlobalSoftmaxScalingPolicy
   policy_kwargs:
     features_extractor_kwargs:
       config:

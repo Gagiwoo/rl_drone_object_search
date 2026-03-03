@@ -60,6 +60,7 @@ def custom_evaluate_policy(
     n_envs = env.num_envs
     episode_rewards = []
     episode_lengths = []
+    episode_successes = []
 
     episode_counts = np.zeros(n_envs, dtype="int")
     # Divides episodes among different sub environments in the vector as evenly as possible
@@ -97,20 +98,20 @@ def custom_evaluate_policy(
 
                 if dones[i]:
                     if is_monitor_wrapped:
-                        # Atari wrapper can send a "done" signal when
-                        # the agent loses a life, but it does not correspond
-                        # to the true end of episode
                         if "episode" in info.keys():
-                            # Do not trust "done" with episode endings.
-                            # Monitor wrapper includes "episode" key in info if environment
-                            # has been wrapped with it. Use those rewards instead.
                             episode_rewards.append(info["episode"]["r"])
                             episode_lengths.append(info["episode"]["l"])
+                            # Success 정보 수집 추가
+                            if "is_success" in info:
+                                episode_successes.append(info["is_success"])
                             # Only increment at the real end of an episode
                             episode_counts[i] += 1
                     else:
                         episode_rewards.append(current_rewards[i])
                         episode_lengths.append(current_lengths[i])
+                        # Success 정보 수집 (Monitor 없을 때)
+                        if "is_success" in info:
+                            episode_successes.append(info["is_success"])
                         episode_counts[i] += 1
                     current_rewards[i] = 0
                     current_lengths[i] = 0
@@ -125,7 +126,7 @@ def custom_evaluate_policy(
     if reward_threshold is not None:
         assert mean_reward > reward_threshold, f"Mean reward below threshold: {mean_reward:.2f} < {reward_threshold:.2f}"
     if return_episode_rewards:
-        return episode_rewards, episode_lengths
+        return episode_rewards, episode_lengths, episode_successes 
     return mean_reward, std_reward
 
 
@@ -272,8 +273,8 @@ class EvaluationCallback(EvalCallback):
 
             if self._seed is not None:
                 self.eval_env.seed(self._seed)
-
-            episode_rewards, episode_lengths = custom_evaluate_policy(
+                
+            episode_rewards, episode_lengths, episode_successes = custom_evaluate_policy(  # ← 수정!
                 self.model,
                 self.eval_env,
                 n_eval_episodes=self.n_eval_episodes,
@@ -314,6 +315,13 @@ class EvaluationCallback(EvalCallback):
             # Add to current Logger
             self.logger.record("eval/mean_reward", float(mean_reward))
             self.logger.record("eval/mean_ep_length", mean_ep_length)
+
+            # Success rate 추가
+            if len(episode_successes) > 0:
+                success_rate = np.mean(episode_successes)
+                self.logger.record("eval/success_rate", float(success_rate))
+                if self.verbose >= 1:
+                    print(f"Eval success rate: {success_rate:.2%}")
 
             # Dump log so the evaluation results are printed with the correct timestep
             self.logger.record("time/total_timesteps", self.num_timesteps, exclude="tensorboard")

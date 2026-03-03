@@ -164,32 +164,31 @@ class RecordVideoCallback(BaseCallback):
 
     def _play_episode(self) -> list[NDArray[np.uint8]]:
         assert self.video_env is not None
-
         frames = []
-
         terminated = False
         truncated = False
-
         obs = self.video_env.reset()
-
+        
         while not (terminated or truncated):
             # VecEnvs reset automatically, render before taking an action
             frame: NDArray[np.uint8] | list[NDArray[np.uint8]] | None = self.video_env.envs[0].render()
-
             if isinstance(frame, np.ndarray):
                 frames.append(frame)
-
-            actions, action_values, _ = self.model.predict(obs, deterministic=self._deterministic)  # type: ignore[arg-type,misc]
-
-            for i in range(self.video_env.num_envs):
-                self.video_env.env_method("set_action_values", action_values[i, :], indices=i)
-
+            
+            # ✅ 수정: 3개 값 받기
+            actions, action_values, _ = self.model.predict(obs, deterministic=self._deterministic)
+            
+            # ✅ action_values 사용
+            if action_values is not None:
+                for i in range(self.video_env.num_envs):
+                    self.video_env.env_method("set_action_values", action_values[i, :], indices=i)
+            
             obs, _, terminations, infos = self.video_env.step(actions)
-
             terminated = terminations[0]
             truncated = infos[0].get("TimeLimit.truncated", False)
-
+        
         return frames
+
 
     def _save_video(self, frames: list[NDArray[np.uint8]], filename: str) -> Path:
         assert self.video_folder is not None

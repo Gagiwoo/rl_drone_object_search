@@ -4,14 +4,15 @@ import os
 
 from gymnasium import register
 
-# Disable Pygame welcome message before we import Pygame somewhere
+# Disable Pygame welcome message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 from drone_grid_env.envs.drone_grid_env import DroneGridEnv
 
 __version__ = "1.0.0"
 __all__ = ["DroneGridEnv"]
-
 
 register(
     id="DroneGridEnv-v0",

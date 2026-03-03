@@ -9,6 +9,9 @@ from wandb.integration.sb3 import WandbCallback
 
 from gymnasium import make
 
+import shutil
+import os
+
 if TYPE_CHECKING:
     from typing import Literal
 
@@ -84,22 +87,30 @@ class CustomWandbCallback(WandbCallback):
 
     @staticmethod
     def upload_file(file: Path, filename: str, tmp_path: Path = Path.cwd() / "wandb/tmp") -> None:
-        # if not tmp_path.is_dir():
-        #     tmp_path.mkdir(parents=True)
-
-        # if (tmp_path / filename).is_file():
-        #     (tmp_path / filename).unlink()
-
-        # tmp_file = Path(copy2(file, tmp_path))
-        # tmp_file.rename(tmp_path / filename)
-
-        wandb.save(str(file), str(file.parent))
+        """파일을 wandb에 업로드 (symlink 대신 복사 사용)"""
+        import shutil
+        
+        # wandb.run.dir의 files 폴더에 직접 복사
+        if wandb.run is not None:
+            target_dir = Path(wandb.run.dir) / "files"
+            if not target_dir.exists():
+                target_dir.mkdir(parents=True, exist_ok=True)
+            
+            target_path = target_dir / filename
+            
+            # 파일 복사
+            shutil.copy(str(file), str(target_path))
+            
+            # wandb.save() 호출하지 않음 - 이미 올바른 위치에 복사했으므로
 
     @staticmethod
     def custom_env_uploads() -> None:
         # Hack to upload config file for DroneGridEnv
         if all(k in wandb.config for k in ("env", "env_kwargs")) and "DroneGridEnv" in wandb.config["env"]:
-            _env = make(wandb.config["env"], **wandb.config["env_kwargs"])
+            env_kwargs = wandb.config.get("env_kwargs", {})
+            if env_kwargs is None:
+                env_kwargs = {}
+            _env = make(wandb.config["env"], **env_kwargs)
             if hasattr(_env, "config_file_path"):
                 CustomWandbCallback.upload_file(_env.config_file_path, "env_config_file.yaml")
 

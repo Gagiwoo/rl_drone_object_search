@@ -164,6 +164,13 @@ class DroneGridEnv(Env[ObsType, ActType]):
         return ActionSpace.create_keys2action(self.config_file_path)
 
     def _get_info(self) -> dict[str, Any]:
+        # 성공 조건: 모든 객체를 찾았는지 여부
+        is_success = (
+            count_gt_classified_objects(self.world, self.drone) >= self.world.number_of_objects
+            if self.world.number_of_objects > 0
+            else False
+        )
+        
         return {
             "rew": self._total_reward,
             "bat": self.drone.battery_level,
@@ -177,6 +184,7 @@ class DroneGridEnv(Env[ObsType, ActType]):
             "stp": self._steps,
             "pl": self.drone.flight_path.total_distance,
             "action_values": self.action_values,
+            "is_success": is_success,  # ← 추가!
         }
 
     @staticmethod

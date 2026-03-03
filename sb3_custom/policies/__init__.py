@@ -1,7 +1,12 @@
-from __future__ import annotations
-
-from .local_global_softmax_scaling_policy import LocalGlobalSoftmaxScalingPolicy
+"""
+Custom Policies for SB3
+"""
+from sb3_custom.policies.spatial_attention_policy import (
+    SpatialAttentionPolicy,
+    LearnablePoolingPolicy
+)
 
 __all__ = [
-    "LocalGlobalSoftmaxScalingPolicy",
+    "SpatialAttentionPolicy",
+    "LearnablePoolingPolicy",
 ]
