@@ -390,7 +390,7 @@ class SpatialAttentionExtractor(BaseFeaturesExtractor):
             # Resize all to 4×4
             feat_fine_pooled = self.adaptive_pool(feat_fine)
             feat_mid_pooled = self.adaptive_pool(feat_mid)
-            feat_coarse_pooled = feat_coarse
+            feat_coarse_pooled = self.adaptive_pool(feat_coarse)
             
             # Concatenate multi-scale features
             features = th.cat([

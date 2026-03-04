@@ -1,0 +1,83 @@
+DroneGridEnv-v0:
+
+  n_timesteps: 1000000
+  
+  n_envs: 12
+
+  # ========== Core Hyperparameters ==========
+  
+  batch_size: 128
+  
+  buffer_size: 50000
+  
+  learning_rate: !!float 5e-5
+  
+  learning_starts: 10000
+  
+  gamma: 0.99
+  
+  tau: 0.005
+  
+  train_freq: 12
+  
+  gradient_steps: 32
+  
+  target_update_interval: 1
+  
+  max_grad_norm: 10.0
+
+  # ========== Exploration ==========
+  
+  exploration_fraction: 0.4
+  
+  exploration_initial_eps: 1.0
+  
+  exploration_final_eps: 0.02
+
+  # ========== Policy ==========
+  # Baseline: LearnablePoolingPolicy (AvgPool only, no CBAM, no Multi-scale)
+  
+  policy: sb3_custom.policies.spatial_attention_policy.LearnablePoolingPolicy
+
+  policy_kwargs:
+    net_arch:
+      - 512
+      - 256
+      - 256
+
+  # ========== Environment ==========
+  
+  env_wrapper:
+    - drone_grid_env.wrappers.EpisodeInfoBufferWrapper
+
+  # ========== Callbacks ==========
+  
+  callback:
+    - sb3_custom.callbacks.ModelSummaryCallback
+    - sb3_custom.callbacks.EpisodeInfoLoggerCallback
+    - sb3_custom.callbacks.CustomWandbCallback
+    - sb3_custom.callbacks.EvaluationCallback:
+        best_model_save_path: training/ablation_baseline/
+        last_model_save_path: training/ablation_baseline/
+        log_path: training/ablation_baseline/evaluations
+        deterministic: false
+        eval_freq: 10000
+        n_eval_episodes: 10
+        fallback_env: DroneGridEnv-v0
+        fallback_env_kwargs:
+          config_file: experiments/distributions/env_config_medium.yaml
+        n_eval_envs: 12
+        seed: 1234
+        vec_env_class: subproc
+    - sb3_custom.callbacks.RecordVideoCallback:
+        video_path: training/ablation_baseline/
+        deterministic: false
+        fallback_env: DroneGridEnv-v0
+        fallback_env_kwargs:
+          config_file: experiments/distributions/env_config_medium.yaml
+          render_mode: "rgb_array"
+        n_video_episodes: 3
+        save_individual_episodes: true
+        record_freq: 50000
+        seed: 1234
+        verbose: true
