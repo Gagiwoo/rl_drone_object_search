@@ -95,7 +95,7 @@ def create_figure1_success_rate(success_df):
         ax.text(-0.15, 1.0, f'({chr(97+idx)})', transform=ax.transAxes,
                fontsize=14, fontweight='bold', va='top', ha='right')
 
-        ax.set_xlabel('Environment Steps', fontsize=12, fontweight='bold')
+        ax.set_xlabel('Evaluation Steps', fontsize=12, fontweight='bold')
         if idx == 0:
             ax.set_ylabel('Success Rate', fontsize=12, fontweight='bold')
         ax.set_xlim(0, COMMON_STEPS)
@@ -178,7 +178,7 @@ def create_figure_reward_length(scenario_name, proposed_col, prior_col,
         ax.text(-0.15, 1.0, f'({chr(97+idx)})', transform=ax.transAxes,
                fontsize=14, fontweight='bold', va='top', ha='right')
 
-        ax.set_xlabel('Environment Steps', fontsize=12, fontweight='bold')
+        ax.set_xlabel('Evaluation Steps', fontsize=12, fontweight='bold')
         ax.set_ylabel(ylabel, fontsize=12, fontweight='bold')
         ax.set_xlim(0, COMMON_STEPS)
         if ylim:
